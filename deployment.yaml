@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banking-portal-ui
+  labels:
+    app: banking-portal-ui
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: banking-portal-ui
+  template:
+    metadata:
+      labels:
+        app: banking-portal-ui
+    spec:
+      containers:
+      - name: banking-portal-ui
+        image: <your-openshift-registry>/banking-portal-ui:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: banking-portal-ui
+spec:
+  selector:
+    app: banking-portal-ui
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: banking-portal-ui
+spec:
+  to:
+    kind: Service
+    name: banking-portal-ui
+  port:
+    targetPort: 80
+  tls:
+    termination: edge
