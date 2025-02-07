@@ -1,14 +1,24 @@
-# Use Node.js for building Angular app
-FROM node:18 AS build-stage
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm install
-COPY . .
-RUN npm run build --prod
+# Import the base image as UBI-Nodejs 18 image
+FROM registry.access.redhat.com/ubi8/nodejs-20
 
-# Use Nginx for serving the Angular app
-FROM nginx:alpine
-COPY --from=build-stage /app/dist/banking-portal-ui /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Set the working directory to /project
+WORKDIR /project
+
+# Copy package files in container currunt direcctory
+COPY --chown=1001:1001 package.json package-lock.json ./
+
+
+# Install all Angular dependacies
+RUN npm ci
+
+# Add application files in container 
+COPY . .
+
+# Set permision of .angular file in container
+VOLUME ["/project/.angular"]
+
+# Open port to allow traffic in container
+EXPOSE 8080
+
+# Run start script using npm command
+CMD ["npm", "start"]
