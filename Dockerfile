@@ -1,24 +1,30 @@
-# Import the base image as UBI-Nodejs 18 image
-FROM registry.access.redhat.com/ubi8/nodejs-20
+# Use Node.js to build the Angular app
+FROM node:22 AS build
 
-# Set the working directory to /project
-WORKDIR /project
+# Set working directory
+WORKDIR /app
 
-# Copy package files in container currunt direcctory
-COPY --chown=1001:1001 package.json package-lock.json ./
+# Copy package.json and install dependencies
+COPY package*.json ./
+RUN npm install
 
-
-# Install all Angular dependacies
-RUN npm ci
-
-# Add application files in container 
+# Copy the rest of the application files
 COPY . .
 
-# Set permision of .angular file in container
-VOLUME ["/project/.angular"]
+# Build Angular app in production mode
+RUN npm run build -- --configuration production
 
-# Open port to allow traffic in container
-EXPOSE 8080
+# Use Nginx to serve the built files
+FROM nginx:alpine
 
-# Run start script using npm command
-CMD ["npm", "start"]
+# Copy built files from Node.js stage to Nginx
+COPY --from=build /app/dist/banking-portal-ui /usr/share/nginx/html
+
+# Copy custom Nginx config (if needed)
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose port 80 for OpenShift
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
