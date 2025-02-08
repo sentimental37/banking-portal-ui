@@ -17,11 +17,17 @@ RUN npm run build -- --configuration production
 # Use Nginx to serve the built files
 FROM nginx:alpine
 
+RUN chmod -R 777 /etc/nginx /usr/share/nginx/html
+USER 1001  # Run as non-root (OpenShift compatible)
+
 # Copy built files from Node.js stage to Nginx
 COPY --from=build /app/dist/banking-portal /usr/share/nginx/html
 
-# Copy custom Nginx config (if needed)
+# Copy Nginx config (without server block)
 COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy site-specific config (contains server block)
+COPY default.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80 for OpenShift
 EXPOSE 80
