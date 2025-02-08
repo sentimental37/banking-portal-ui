@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: banking-portal-ui
-        image: ${{ secrets.OPENSHIFT_REGISTRY }}/${{ secrets.OPENSHIFT_PROJECT }}/banking-portal-ui:latest
+        image: default-route-openshift-image-registry.apps.rm2.thpm.p1.openshiftapps.com/sentimental37-dev/banking-portal-ui:latest
         ports:
         - containerPort: 80
         resources:
