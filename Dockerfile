@@ -21,8 +21,6 @@ RUN chmod -R 777 /etc/nginx /usr/share/nginx/html
 RUN mkdir -p /var/cache/nginx/client_temp
 RUN chmod -R 777 /var/cache/nginx
 
-USER 1001  # Run as non-root (OpenShift compatible)
-
 # Copy built files from Node.js stage to Nginx
 COPY --from=build /app/dist/banking-portal /usr/share/nginx/html
 
