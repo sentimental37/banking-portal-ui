@@ -17,9 +17,7 @@ RUN npm run build -- --configuration production
 # Use Nginx to serve the built files
 FROM nginx:alpine
 
-RUN chmod -R 777 /etc/nginx /usr/share/nginx/html
-RUN mkdir -p /var/cache/nginx/client_temp
-RUN chmod -R 777 /var/cache/nginx
+
 
 # Copy built files from Node.js stage to Nginx
 COPY --from=build /app/dist/banking-portal /usr/share/nginx/html
@@ -29,6 +27,18 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy site-specific config (contains server block)
 COPY default.conf /etc/nginx/conf.d/default.conf
+
+RUN chmod -R 777 /etc/nginx /usr/share/nginx/html
+RUN mkdir -p /var/cache/nginx/client_temp
+RUN chmod -R 777 /var/cache/nginx
+
+# Change ownership to a non-root user (OpenShift compatible)
+RUN chown -R 1001:0 /usr/share/nginx/html /var/cache/nginx /var/run /etc/nginx \
+    && chmod -R g+w /usr/share/nginx/html /var/cache/nginx /var/run /etc/nginx
+
+# Use a non-root user
+USER 1001
+
 
 # Expose port 80 for OpenShift
 EXPOSE 8080
