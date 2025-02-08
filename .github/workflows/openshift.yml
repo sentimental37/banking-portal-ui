@@ -1,0 +1,63 @@
+name: Deploy Angular UI to OpenShift
+
+on:
+  push:
+    branches:
+      - main  # Change if you deploy from another branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Install Node.js & Angular CLI
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install Dependencies & Build Angular App
+      run: |
+        npm install
+        npm run build --prod
+
+    - name: Set Up OpenShift CLI
+      run: |
+        curl -LO https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz
+        tar -xzf oc.tar.gz
+        chmod +x oc
+        sudo mv oc /usr/local/bin/
+        oc version
+
+    - name: Login to OpenShift
+      run: |
+        oc login --token=${{ secrets.OPENSHIFT_TOKEN }} --server=${{ secrets.OPENSHIFT_SERVER }}
+        oc project ${{ secrets.OPENSHIFT_PROJECT }}
+
+    - name: Login to OpenShift Container Registry
+      run: |
+        echo "Logging into OpenShift internal registry..."
+        docker login -u ${{ secrets.REGISTRY_USER }} -p $(oc whoami -t) ${{ secrets.OPENSHIFT_REGISTRY }}
+
+    - name: Build & Push Docker Image
+      run: |
+        echo "Building Docker image..."
+        docker build -t ${{ secrets.IMAGE_NAME }} .
+        
+        echo "Tagging Docker image..."
+        docker tag ${{ secrets.IMAGE_NAME }} ${{ secrets.OPENSHIFT_REGISTRY }}/${{ secrets.OPENSHIFT_PROJECT }}/${{ secrets.IMAGE_NAME }}:latest
+        
+        echo "Pushing Docker image to OpenShift registry..."
+        docker push ${{ secrets.OPENSHIFT_REGISTRY }}/${{ secrets.OPENSHIFT_PROJECT }}/${{ secrets.IMAGE_NAME }}:latest
+
+    - name: Deploy to OpenShift
+      run: |
+        echo "Applying Deployment in OpenShift..."
+        oc apply -f deployment.yaml
+
+    - name: Restart Deployment
+      run: |
+        echo "Restarting Deployment..."
+        oc rollout restart deployment/${{ secrets.IMAGE_NAME }}
