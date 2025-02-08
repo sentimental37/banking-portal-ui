@@ -16,16 +16,16 @@ spec:
     spec:
       containers:
       - name: banking-portal-ui
-        image: <your-openshift-registry>/banking-portal-ui:latest
+        image: ${{ secrets.OPENSHIFT_REGISTRY }}/${{ secrets.OPENSHIFT_PROJECT }}/banking-portal-ui:latest
         ports:
         - containerPort: 80
         resources:
           requests:
-            cpu: "250m"
-            memory: "512Mi"
+            cpu: "100m"
+            memory: "128Mi"
           limits:
-            cpu: "500m"
-            memory: "1Gi"
+            cpu: "200m"
+            memory: "256Mi"
 
 ---
 apiVersion: v1
@@ -39,7 +39,7 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 80
-  type: ClusterIP
+  type: ClusterIP  # No LoadBalancer
 
 ---
 apiVersion: route.openshift.io/v1
