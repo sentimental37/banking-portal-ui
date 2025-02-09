@@ -1,6 +1,6 @@
 export const environment = {
     production: false,
-    apiUrl: 'http://localhost:8080/api',
+    apiUrl: 'https://banking-portal-api-sentimental37-dev.apps.rm2.thpm.p1.openshiftapps.com/api',
     tokenName :  "authToken",
-    origin:'http://localhost:4200' 
+    origin:'https://banking-portal-ui-sentimental37-dev.apps.rm2.thpm.p1.openshiftapps.com' 
   };
